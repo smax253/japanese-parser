@@ -106,6 +106,15 @@ interface Deinflection {
     debug?: string;
 }
 
+interface IndividualWordResult {
+    dictionaryForm: string;
+    reading: string;
+    originalForm: string;
+    definitions: string[];
+    partOfSpeech: string[];
+    conjugation?: string;
+}
+
 interface WordSearchResult {
     data?: any[];
     matchLen?: number;
@@ -149,6 +158,7 @@ interface Dictionary {
         doNames: boolean,
         max: number,
     ) => WordSearchResult;
+    parseDictEntry: (entry: string, original: string, inf?: string) => IndividualWordResult;
 }
 
 function hasKey<O>(obj: O, key: keyof any): key is keyof O {
@@ -265,7 +275,7 @@ const RikaiDict: Dictionary = {
         return array;
     },
 
-    deinflect(word) {
+    deinflect: (word) => {
         const r = [];
         const have: any = [];
         let o: Deinflection;
@@ -327,7 +337,21 @@ const RikaiDict: Dictionary = {
 
         return r;
     },
-    wordSearch(word, doNames, max) {
+    parseDictEntry: (dictEntry: string, original:string, inflection?: string) => {
+        const dictionaryForm = dictEntry.substring(0, dictEntry.indexOf('[')-1);
+        const partOfSpeech = dictEntry.match(/\(.*?\)/)[0].slice(1, -1).split(',');
+        const reading = dictEntry.match(/\[.*\]/)[0].slice(1, -1);
+        const definitions = dictEntry.match(/\([0-9]*\).+?(?=\([0-9]*\))|\([0-9]*\).+/g);
+        return {
+            dictionaryForm,
+            partOfSpeech,
+            reading,
+            definitions,
+            originalForm: original,
+            conjugation: inflection
+        }
+    },
+    wordSearch: (word, doNames, max) => {
         let i;
         let u;
         let v;
@@ -476,13 +500,13 @@ const RikaiDict: Dictionary = {
 
                         if (trys[i].reason) {
                             if (showInf)
-                                r = '< ' + trys[i].reason + ' < ' + word;
-                            else r = '< ' + trys[i].reason;
+                                r = trys[i].reason + ' < ' + word;
+                            else r = trys[i].reason;
                         } else {
                             r = null;
                         }
 
-                        entry.data.push([dentry, r]);
+                        entry.data.push(RikaiDict.parseDictEntry(dentry, word, r));
                     }
                 } // for j < ix.length
                 if (count >= maxTrim) break;
