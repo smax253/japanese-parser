@@ -90,15 +90,6 @@ const cv = [
 ];
 const cs = [0x3071, 0x3074, 0x3077, 0x307a, 0x307d];
 
-interface DictEntries {
-    wordDict: string[];
-    wordIndex: string[];
-    kanjiData: string[];
-    radData: string[];
-    nameDict: string[];
-    nameIndex: string[];
-}
-
 interface Deinflection {
     word?: string;
     type?: number;
@@ -158,7 +149,11 @@ interface Dictionary {
         doNames: boolean,
         max: number,
     ) => WordSearchResult;
-    parseDictEntry: (entry: string, original: string, inf?: string) => IndividualWordResult;
+    parseDictEntry: (
+        entry: string,
+        original: string,
+        inf?: string,
+    ) => IndividualWordResult;
 }
 
 function hasKey<O>(obj: O, key: keyof any): key is keyof O {
@@ -192,7 +187,7 @@ const RikaiDict: Dictionary = {
 
         return Promise.all(promises).then(() => {
             const ended = +new Date();
-            console.log('rcxDict main init done in ' + (ended - started));
+            console.log(`rcxDict main init done in ${ended - started} ms`);
         });
     },
     loadDictionary: (includeNames: boolean) => {
@@ -337,19 +332,37 @@ const RikaiDict: Dictionary = {
 
         return r;
     },
-    parseDictEntry: (dictEntry: string, original:string, inflection?: string) => {
-        const dictionaryForm = dictEntry.substring(0, dictEntry.indexOf('[')-1);
-        const partOfSpeech = dictEntry.match(/\(.*?\)/)[0].slice(1, -1).split(',');
+    parseDictEntry: (
+        dictEntry: string,
+        original: string,
+        inflection?: string,
+    ) => {
+        const dictionaryForm = dictEntry.substring(
+            0,
+            dictEntry.indexOf('[') - 1,
+        );
+        const partOfSpeech = dictEntry
+            .match(/\(.*?\)/)[0]
+            .slice(1, -1)
+            .split(',');
         const reading = dictEntry.match(/\[.*\]/)[0].slice(1, -1);
-        const definitions = dictEntry.match(/\([0-9]*\).+?(?=\([0-9]*\))|\([0-9]*\).+/g);
+        let definitions = dictEntry.match(
+            /\([0-9]*\).+?(?=\([0-9]*\))|\([0-9]*\).+/g,
+        );
+        if (!definitions) definitions = [dictEntry.match(/\).*/)[0].slice(2)];
+        else {
+            definitions = definitions.map((entry) => {
+                return entry.slice(entry.indexOf(')') + 2);
+            });
+        }
         return {
             dictionaryForm,
             partOfSpeech,
             reading,
             definitions,
             originalForm: original,
-            conjugation: inflection
-        }
+            conjugation: inflection,
+        };
     },
     wordSearch: (word, doNames, max) => {
         let i;
@@ -499,14 +512,15 @@ const RikaiDict: Dictionary = {
                         if (maxLen === 0) maxLen = trueLen[word.length];
 
                         if (trys[i].reason) {
-                            if (showInf)
-                                r = trys[i].reason + ' < ' + word;
+                            if (showInf) r = trys[i].reason + ' < ' + word;
                             else r = trys[i].reason;
                         } else {
                             r = null;
                         }
 
-                        entry.data.push(RikaiDict.parseDictEntry(dentry, word, r));
+                        entry.data.push(
+                            RikaiDict.parseDictEntry(dentry, word, r),
+                        );
                     }
                 } // for j < ix.length
                 if (count >= maxTrim) break;
