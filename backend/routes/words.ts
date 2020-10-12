@@ -2,8 +2,6 @@ import express from 'express';
 import RikaiDict from '../rikaikun';
 const router = express.Router();
 
-router.get('/:word:');
-
 router.get('/', async (req, res) => {
     console.log(req.body);
     const query = req.body?.query;

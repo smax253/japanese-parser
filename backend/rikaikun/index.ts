@@ -345,7 +345,9 @@ const RikaiDict: Dictionary = {
             .match(/\(.*?\)/)[0]
             .slice(1, -1)
             .split(',');
-        const reading = dictEntry.match(/\[.*\]/)[0].slice(1, -1);
+        const reading = dictEntry.match(/\[.*\]/)
+            ? dictEntry.match(/\[.*\]/)[0].slice(1, -1)
+            : original;
         let definitions = dictEntry.match(
             /\([0-9]*\).+?(?=\([0-9]*\))|\([0-9]*\).+/g,
         );
@@ -555,5 +557,5 @@ const RikaiDict: Dictionary = {
         return null;
     },
 };
-
+export type { Dictionary, WordSearchResult };
 export default RikaiDict;

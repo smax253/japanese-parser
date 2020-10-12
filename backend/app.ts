@@ -1,6 +1,7 @@
 import rikaiDict from './rikaikun';
 import express from 'express';
 import routesInit from './routes';
+import compromise from 'compromise';
 const app = express();
 
 const start = async () => {
@@ -15,4 +16,7 @@ const start = async () => {
     });
 };
 
-start();
+// start();
+
+const result = compromise("Max's car is red.");
+console.log(JSON.stringify(result.json()));
