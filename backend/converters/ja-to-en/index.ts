@@ -28,14 +28,13 @@ const matchParse = async (
     });
     const result: any = [];
     let currentIndex = 0;
-    console.log(mapping);
     partOfSpeechResult.tokens.forEach((value: any) => {
         if (currentIndex >= parse.length || ignored.includes(value.lemma))
             return;
         let partOfSpeech: string[];
         const googlePOS = value.partOfSpeech.tag.toString();
         if (!hasKey(mapping, googlePOS)) {
-            console.warn('key does not exist!');
+            console.warn('key does not exist!', googlePOS);
             return;
         }
         partOfSpeech = (mapping[googlePOS] as unknown) as string[];
@@ -58,6 +57,7 @@ const matchParse = async (
             ...definition,
         });
     });
+    console.log('real result: ', result)
     return result;
 };
 

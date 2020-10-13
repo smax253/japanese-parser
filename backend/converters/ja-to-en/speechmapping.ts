@@ -1,4 +1,5 @@
 export default {
+    DET: ['pn'],
     PRON: ['pn'],
     PRT: ['prt'],
     NOUN: ['n'],
